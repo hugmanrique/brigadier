@@ -69,7 +69,7 @@ public class LiteralCommandNode<S> extends CommandNode<S> {
 
     @Override
     public CompletableFuture<Suggestions> listSuggestions(final CommandContext<S> context, final SuggestionsBuilder builder) {
-        if (literalLowerCase.startsWith(builder.getRemainingLowerCase())) {
+        if (literalLowerCase.regionMatches(true, 0, builder.getRemainingLowerCase(), 0, builder.getRemainingLowerCase().length())) {
             return builder.suggest(literal).buildFuture();
         } else {
             return Suggestions.empty();
