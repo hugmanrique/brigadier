@@ -4,6 +4,7 @@
 package com.mojang.brigadier;
 
 import com.google.common.collect.Lists;
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.context.CommandContextBuilder;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -112,6 +113,7 @@ public class CommandDispatcherTest {
     @Test
     public void testExecuteContextImpermissibleCommand() throws Exception {
         subject.register(literal("foo").requiresWithContext(results -> {
+            assertThat(results.getContext().getNodes().size(), is(1));
             assertThat(results.getReader().getCursor(), is(3));
             return false;
         }));
@@ -122,6 +124,25 @@ public class CommandDispatcherTest {
         } catch (final CommandSyntaxException ex) {
             assertThat(ex.getType(), is(CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand()));
             assertThat(ex.getCursor(), is(0));
+        }
+    }
+
+    @Test
+    public void testExecuteContextImpermissibleArguments() throws Exception {
+        subject.register(literal("foo")
+            .then(argument("bar", StringArgumentType.greedyString())
+                .requiresWithContext(results -> {
+                    assertThat(results.getContext().getNodes().size(), is(2));
+                    assertThat(results.getReader().getCursor(), is(7));
+                    return false;
+                })));
+
+        try {
+            subject.execute("foo baz", source);
+            fail();
+        } catch (final CommandSyntaxException ex) {
+            assertThat(ex.getType(), is(CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownArgument()));
+            assertThat(ex.getCursor(), is(4));
         }
     }
 
