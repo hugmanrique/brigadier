@@ -110,6 +110,22 @@ public class CommandDispatcherTest {
     }
 
     @Test
+    public void testExecuteContextImpermissibleCommand() throws Exception {
+        subject.register(literal("foo").requiresWithContext(results -> {
+            assertThat(results.getReader().getCursor(), is(3));
+            return false;
+        }));
+
+        try {
+            subject.execute("foo", source);
+            fail();
+        } catch (final CommandSyntaxException ex) {
+            assertThat(ex.getType(), is(CommandSyntaxException.BUILT_IN_EXCEPTIONS.dispatcherUnknownCommand()));
+            assertThat(ex.getCursor(), is(0));
+        }
+    }
+
+    @Test
     public void testExecuteEmptyCommand() throws Exception {
         subject.register(literal(""));
 
