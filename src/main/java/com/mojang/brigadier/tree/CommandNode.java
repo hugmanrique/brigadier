@@ -5,6 +5,7 @@ package com.mojang.brigadier.tree;
 
 import com.mojang.brigadier.AmbiguityConsumer;
 import com.mojang.brigadier.Command;
+import com.mojang.brigadier.ImmutableStringReader;
 import com.mojang.brigadier.RedirectModifier;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.builder.ArgumentBuilder;
@@ -22,13 +23,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
 public abstract class CommandNode<S> implements Comparable<CommandNode<S>> {
     private final Map<String, CommandNode<S>> children = new TreeMap<>();
     private final Map<String, ArgumentCommandNode<S, ?>> arguments = new LinkedHashMap<>();
     private final Predicate<S> requirement;
-    private final Predicate<CommandContextBuilder<S>> contextRequirement;
+    private final BiPredicate<CommandContextBuilder<S>, ImmutableStringReader> contextRequirement;
     private final CommandNode<S> redirect;
     private final RedirectModifier<S> modifier;
     private final boolean forks;
@@ -38,13 +40,13 @@ public abstract class CommandNode<S> implements Comparable<CommandNode<S>> {
     protected CommandNode(final Command<S> command, final Predicate<S> requirement, final CommandNode<S> redirect, final RedirectModifier<S> modifier, final boolean forks) {
         this.command = command;
         this.requirement = requirement;
-        this.contextRequirement = context -> true;
+        this.contextRequirement = (context, reader) -> true;
         this.redirect = redirect;
         this.modifier = modifier;
         this.forks = forks;
     }
 
-    protected CommandNode(final Command<S> command, final Predicate<S> requirement, final Predicate<CommandContextBuilder<S>> contextRequirement, final CommandNode<S> redirect, final RedirectModifier<S> modifier, final boolean forks) {
+    protected CommandNode(final Command<S> command, final Predicate<S> requirement, final BiPredicate<CommandContextBuilder<S>, ImmutableStringReader> contextRequirement, final CommandNode<S> redirect, final RedirectModifier<S> modifier, final boolean forks) {
         this.command = command;
         this.requirement = requirement;
         this.contextRequirement = contextRequirement;
@@ -77,8 +79,8 @@ public abstract class CommandNode<S> implements Comparable<CommandNode<S>> {
         return requirement.test(source);
     }
 
-    public boolean canUse(final CommandContextBuilder<S> context) {
-        return contextRequirement.test(context);
+    public boolean canUse(final CommandContextBuilder<S> context, final ImmutableStringReader reader) {
+        return contextRequirement.test(context, reader);
     }
 
     public void addChild(final CommandNode<S> node) {
@@ -161,7 +163,7 @@ public abstract class CommandNode<S> implements Comparable<CommandNode<S>> {
         return requirement;
     }
 
-    public Predicate<CommandContextBuilder<S>> getContextRequirement() {
+    public BiPredicate<CommandContextBuilder<S>, ImmutableStringReader> getContextRequirement() {
         return contextRequirement;
     }
 
