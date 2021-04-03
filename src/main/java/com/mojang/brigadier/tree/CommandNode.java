@@ -15,10 +15,12 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
@@ -189,7 +191,16 @@ public abstract class CommandNode<S> implements Comparable<CommandNode<S>> {
             input.setCursor(cursor);
             final CommandNode<S> node = children.get(text);
             if (node instanceof LiteralCommandNode<?>) {
-                return Collections.singleton(node);
+                final int argumentsCount = arguments.size();
+                if (argumentsCount == 0) {
+                    return Collections.singletonList(node);
+                } else {
+                    final List<CommandNode<S>> nodes =
+                            new ArrayList<>(argumentsCount + 1);
+                    nodes.add(node); // literals have priority over arguments
+                    nodes.addAll(arguments.values());
+                    return nodes;
+                }
             } else {
                 return arguments.values();
             }
