@@ -347,7 +347,7 @@ public class CommandDispatcher<S> {
         return parseNodes(root, command, context);
     }
 
-    private ParseResults<S> parseNodes(final CommandNode<S> node, final StringReader originalReader, final CommandContextBuilder<S> contextSoFar) {
+    public ParseResults<S> parseNodes(final CommandNode<S> node, final StringReader originalReader, final CommandContextBuilder<S> contextSoFar) {
         final S source = contextSoFar.getSource();
         Map<CommandNode<S>, CommandSyntaxException> errors = null;
         List<ParseResults<S>> potentials = null;
