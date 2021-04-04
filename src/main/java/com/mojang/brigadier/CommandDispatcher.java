@@ -602,18 +602,6 @@ public class CommandDispatcher<S> {
         int i = 0;
         for (final CommandNode<S> node : parent.getChildren()) {
             CompletableFuture<Suggestions> future = Suggestions.empty();
-            if (!node.canUse(context.getSource())) {
-                futures[i++] = future;
-                continue;
-            }
-            // We don't know the real range of the parsed contents; default to an empty range.
-            final CommandContextBuilder<S> nodeContext = context.copy().withNode(node, StringRange.at(start));
-            final StringReader reader = new StringReader(truncatedInput);
-            reader.setCursor(start);
-            if (!node.canUse(nodeContext, reader)) {
-                futures[i++] = future;
-                continue;
-            }
             try {
                 future = node.listSuggestions(context.build(truncatedInput), new SuggestionsBuilder(truncatedInput, start));
             } catch (final CommandSyntaxException ignored) {
