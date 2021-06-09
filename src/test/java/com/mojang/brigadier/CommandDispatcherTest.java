@@ -9,6 +9,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.context.CommandContextBuilder;
 import com.mojang.brigadier.context.StringRange;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.tree.ArgumentCommandNode;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
@@ -497,17 +498,16 @@ public class CommandDispatcherTest {
         assertThat(subject.findNode(Lists.newArrayList("foo", "bar")), is(nullValue()));
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testCompletionWithErroredFutureReturnsCompletedFuture() {
         final LiteralCommandNode<Object> bar = literal("bar").build();
-        final LiteralCommandNode<Object> baz = mock(LiteralCommandNode.class);
-        when(baz.getLiteral()).thenReturn("baz");
-        when(baz.listSuggestions(any(), any())).thenAnswer(x -> {
-            final CompletableFuture<Suggestions> future = new CompletableFuture<>();
-            future.completeExceptionally(new IllegalArgumentException());
-            return future;
-        });
+        final ArgumentCommandNode<Object, String> baz = argument("baz", StringArgumentType.word())
+            .suggests((context, builder) -> {
+                final CompletableFuture<Suggestions> future = new CompletableFuture<>();
+                future.completeExceptionally(new IllegalArgumentException());
+                return future;
+            })
+            .build();
         subject.register(literal("foo").then(bar).then(baz));
 
         final ParseResults<Object> parseResults = subject.parse("foo b", source);
